@@ -67,7 +67,7 @@
                   DestinationFileName="copilot.tgz"
                   Condition="!Exists('$(IntermediateOutputPath)copilot-cli\$(_CopilotCliVer)\%(_CopilotPlatforms.Identity)\%(_CopilotPlatforms.Binary)')" />
 
-    <Exec Command="&quot;$(_TarCmd)&quot; -xzf &quot;$(IntermediateOutputPath)copilot-cli\$(_CopilotCliVer)\%(_CopilotPlatforms.Identity)\copilot.tgz&quot; --strip-components=1 -C &quot;$(IntermediateOutputPath)copilot-cli\$(_CopilotCliVer)\%(_CopilotPlatforms.Identity)&quot;"
+    <Exec Command="&quot;$(_TarCmd)&quot; -xzf &quot;$(IntermediateOutputPath)copilot-cli/$(_CopilotCliVer)/%(_CopilotPlatforms.Identity)/copilot.tgz&quot; --strip-components=1 -C &quot;$(IntermediateOutputPath)copilot-cli/$(_CopilotCliVer)/%(_CopilotPlatforms.Identity)&quot;"
           Condition="!Exists('$(IntermediateOutputPath)copilot-cli\$(_CopilotCliVer)\%(_CopilotPlatforms.Identity)\%(_CopilotPlatforms.Binary)')" />
 
     <Error Condition="!Exists('$(IntermediateOutputPath)copilot-cli\$(_CopilotCliVer)\%(_CopilotPlatforms.Identity)\%(_CopilotPlatforms.Binary)')"
