@@ -29,4 +29,63 @@
     <PackageReference Include="System.CommandLine" Version="2.0.6" />
     <PackageReference Include="Terminal.Gui" Version="2.0.0-rc.3" />
   </ItemGroup>
+
+  <!--
+    The Copilot SDK only downloads the CLI binary for the build-host platform.
+    A dotnet global tool needs all platform binaries in runtimes/{rid}/native/.
+    We disable the SDK's download and handle all six platforms ourselves.
+  -->
+  <PropertyGroup>
+    <CopilotSkipCliDownload>true</CopilotSkipCliDownload>
+    <_CopilotCliVer>1.0.21</_CopilotCliVer>
+    <_CopilotRegistry>https://registry.npmjs.org</_CopilotRegistry>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <_CopilotPlatforms Include="win32-x64"    Rid="win-x64"     Binary="copilot.exe" />
+    <_CopilotPlatforms Include="win32-arm64"  Rid="win-arm64"   Binary="copilot.exe" />
+    <_CopilotPlatforms Include="linux-x64"    Rid="linux-x64"   Binary="copilot" />
+    <_CopilotPlatforms Include="linux-arm64"  Rid="linux-arm64" Binary="copilot" />
+    <_CopilotPlatforms Include="darwin-x64"   Rid="osx-x64"     Binary="copilot" />
+    <_CopilotPlatforms Include="darwin-arm64" Rid="osx-arm64"   Binary="copilot" />
+  </ItemGroup>
+
+  <Target Name="_DownloadAllCopilotClis" BeforeTargets="Build;Publish">
+    <PropertyGroup>
+      <_TarCmd Condition="$([MSBuild]::IsOSPlatform('Windows'))">$(SystemRoot)\System32\tar.exe</_TarCmd>
+      <_TarCmd Condition="'$(_TarCmd)' == ''">tar</_TarCmd>
+    </PropertyGroup>
+
+    <MakeDir Directories="$(IntermediateOutputPath)copilot-cli\$(_CopilotCliVer)\%(_CopilotPlatforms.Identity)"
+             Condition="!Exists('$(IntermediateOutputPath)copilot-cli\$(_CopilotCliVer)\%(_CopilotPlatforms.Identity)\%(_CopilotPlatforms.Binary)')" />
+
+    <Delete Files="$(IntermediateOutputPath)copilot-cli\$(_CopilotCliVer)\%(_CopilotPlatforms.Identity)\copilot.tgz"
+            Condition="!Exists('$(IntermediateOutputPath)copilot-cli\$(_CopilotCliVer)\%(_CopilotPlatforms.Identity)\%(_CopilotPlatforms.Binary)') And Exists('$(IntermediateOutputPath)copilot-cli\$(_CopilotCliVer)\%(_CopilotPlatforms.Identity)\copilot.tgz')" />
+
+    <DownloadFile SourceUrl="$(_CopilotRegistry)/@github/copilot-%(_CopilotPlatforms.Identity)/-/copilot-%(_CopilotPlatforms.Identity)-$(_CopilotCliVer).tgz"
+                  DestinationFolder="$(IntermediateOutputPath)copilot-cli\$(_CopilotCliVer)\%(_CopilotPlatforms.Identity)"
+                  DestinationFileName="copilot.tgz"
+                  Condition="!Exists('$(IntermediateOutputPath)copilot-cli\$(_CopilotCliVer)\%(_CopilotPlatforms.Identity)\%(_CopilotPlatforms.Binary)')" />
+
+    <Exec Command="&quot;$(_TarCmd)&quot; -xzf &quot;$(IntermediateOutputPath)copilot-cli\$(_CopilotCliVer)\%(_CopilotPlatforms.Identity)\copilot.tgz&quot; --strip-components=1 -C &quot;$(IntermediateOutputPath)copilot-cli\$(_CopilotCliVer)\%(_CopilotPlatforms.Identity)&quot;"
+          Condition="!Exists('$(IntermediateOutputPath)copilot-cli\$(_CopilotCliVer)\%(_CopilotPlatforms.Identity)\%(_CopilotPlatforms.Binary)')" />
+
+    <Error Condition="!Exists('$(IntermediateOutputPath)copilot-cli\$(_CopilotCliVer)\%(_CopilotPlatforms.Identity)\%(_CopilotPlatforms.Binary)')"
+           Text="Failed to extract Copilot CLI for %(_CopilotPlatforms.Identity)" />
+  </Target>
+
+  <Target Name="_CopyCopilotClisToOutput" AfterTargets="Build" DependsOnTargets="_DownloadAllCopilotClis">
+    <MakeDir Directories="$(OutDir)runtimes\%(_CopilotPlatforms.Rid)\native" />
+    <Copy SourceFiles="$(IntermediateOutputPath)copilot-cli\$(_CopilotCliVer)\%(_CopilotPlatforms.Identity)\%(_CopilotPlatforms.Binary)"
+          DestinationFolder="$(OutDir)runtimes\%(_CopilotPlatforms.Rid)\native"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="_IncludeAllCopilotClisInPublish" BeforeTargets="GetCopyToPublishDirectoryItems" DependsOnTargets="_DownloadAllCopilotClis">
+    <ItemGroup>
+      <ContentWithTargetPath Include="$(IntermediateOutputPath)copilot-cli\$(_CopilotCliVer)\%(_CopilotPlatforms.Identity)\%(_CopilotPlatforms.Binary)"
+                             TargetPath="runtimes\%(_CopilotPlatforms.Rid)\native\%(_CopilotPlatforms.Binary)"
+                             CopyToPublishDirectory="PreserveNewest" />
+    </ItemGroup>
+  </Target>
 </Project>
