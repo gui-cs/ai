@@ -18,7 +18,7 @@ A [Terminal.Gui](https://github.com/gui-cs/Terminal.Gui) inline-mode CLI powered
 ## Install
 
 ```bash
-dotnet tool install -g ai
+dotnet tool install -g Terminal.Gui.ai
 ```
 
 ## Usage
