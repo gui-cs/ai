@@ -11,7 +11,7 @@
     <ToolCommandName>ai</ToolCommandName>
 
     <!-- NuGet package metadata -->
-    <PackageId>ai</PackageId>
+    <PackageId>Terminal.Gui.ai</PackageId>
     <Description>A Terminal.Gui inline-mode CLI powered by the GitHub Copilot SDK.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
